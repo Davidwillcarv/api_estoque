@@ -1,0 +1,45 @@
+services:
+  # 1. Banco de Dados PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: stock_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: stock_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # 2. Back-end NestJS
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: stock_backend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgrespassword@postgres:5432/stock_db?schema=public"
+      JWT_SECRET: "sua_chave_secreta_aqui"
+      PORT: 3000
+    depends_on:
+      - postgres
+
+  # 3. Front-end React
+  frontend:
+    build:
+      context: ./frontend-produtos
+      dockerfile: Dockerfile
+    container_name: stock_frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
